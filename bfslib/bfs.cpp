@@ -5,6 +5,9 @@
 
 std::vector<int> seq_bfs(const graph& g, const int root) {
     const size_t n = g.size();
+    if (n == 0) {
+        return std::vector<int>{};
+    }
 
     std::queue<int> q;
     std::vector<int> dist(n, -1);

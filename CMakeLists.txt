@@ -13,17 +13,17 @@ add_subdirectory(bfslib)
 add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} bfslib)
 
-# enable_testing()
+enable_testing()
 
-# add_executable(test_sort test/test_sort.cpp)
+add_executable(test_bfs test/test_bfs.cpp)
 
-# target_link_libraries(test_sort PRIVATE
-#     sortlib
-#     gtest_main
-# )
+target_link_libraries(test_bfs PRIVATE
+    bfslib
+    gtest_main
+)
 
-# include(GoogleTest)
-# gtest_discover_tests(test_sort)
+include(GoogleTest)
+gtest_discover_tests(test_bfs)
 
 # add_executable(sort_benchmark benchmark/sort_benchmark.cpp)
 # target_link_libraries(sort_benchmark PRIVATE sortlib parlay benchmark::benchmark)
