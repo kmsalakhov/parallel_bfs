@@ -1,3 +1,5 @@
+#include <random>
+
 #include <gtest/gtest.h>
 
 #include "bfs.h"
@@ -134,7 +136,7 @@ TEST(SequenceBfs, LargeStarGraph) {
 TEST(ParallelBfs, EmptyGraph) {
     graph g(0);
 
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
 
     EXPECT_EQ(result.empty(), true);
 }
@@ -145,7 +147,7 @@ TEST(ParallelBfs, StarGraph) {
     std::vector<int> expected(5, 1);
     expected[0] = 0;
 
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
 
     EXPECT_EQ(result, expected);
 }
@@ -163,7 +165,7 @@ TEST(ParallelBfs, PathGraph) {
         expected[i] = i;
     }
 
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
 
     EXPECT_EQ(result, expected);
 }
@@ -177,14 +179,14 @@ TEST(ParallelBfs, CycleGraph) {
     }
     const std::vector<int> expected = {0, 1, 2, 2, 1};
 
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
 
     EXPECT_EQ(result, expected);
 }
 
 TEST(ParallelBfs, SingleNodeGraph) {
     graph g(1);
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
     EXPECT_EQ(result, std::vector<int>{0});
 }
 
@@ -196,7 +198,7 @@ TEST(ParallelBfs, DisconnectedGraph) {
     g[3] = {2};
     
     const std::vector<int> expected = {0, 1, -1, -1};
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
     EXPECT_EQ(result, expected);
 }
 
@@ -209,7 +211,7 @@ TEST(ParallelBfs, MultipleShortestPaths) {
     g[4] = {1, 3};
     
     const std::vector<int> expected = {0, 1, 1, 2, 2};
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
     EXPECT_EQ(result, expected);
 }
 
@@ -238,7 +240,7 @@ TEST(ParallelBfs, SemiRandomGraph) {
     g[8] = {6};
     
     const std::vector<int> expected = {0, 1, 1, 2, 2, 2, 3, 4, 4};
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
     EXPECT_EQ(result, expected);
 }
 
@@ -253,6 +255,64 @@ TEST(ParallelBfs, LargeStarGraph) {
     std::vector<int> expected(n, 1);
     expected[0] = 0;
     
-    const std::vector<int> result = seq_bfs(g, 0);
+    const std::vector<int> result = par_bfs(g, 0);
     EXPECT_EQ(result, expected);
+}
+
+
+
+// EQUALITY TESTS
+graph generate_random_graph(int n, double edge_probability, unsigned seed = 42) {
+    std::mt19937 rng(seed);
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    graph g(n);
+    
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j) {
+            if (dist(rng) < edge_probability) {
+                g[i].push_back(j);
+                g[j].push_back(i);
+            }
+        }
+    }
+    return g;
+}
+
+TEST(RandomGraphConsistency, DenseGraph) {
+    const int n = 200;
+    const double density = 0.7;
+    const int root = 0;
+    
+    graph g = generate_random_graph(n, density);
+    
+    auto seq_result = seq_bfs(g, root);
+    auto par_result = par_bfs(g, root);
+    
+    ASSERT_EQ(seq_result, par_result);
+}
+
+TEST(RandomGraphConsistency, SparseGraph) {
+    const int n = 300;
+    const double density = 0.05;
+    const int root = n / 2;
+    
+    graph g = generate_random_graph(n, density);
+    
+    auto seq_result = seq_bfs(g, root);
+    auto par_result = par_bfs(g, root);
+    
+    ASSERT_EQ(seq_result, par_result);
+}
+
+TEST(RandomGraphConsistency, MediumGraph) {
+    const int n = 150;
+    const double density = 0.3;
+    const int root = 42;
+    
+    graph g = generate_random_graph(n, density, 12345);
+    
+    auto seq_result = seq_bfs(g, root);
+    auto par_result = par_bfs(g, root);
+    
+    ASSERT_EQ(seq_result, par_result);
 }

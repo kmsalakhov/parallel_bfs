@@ -10,6 +10,40 @@
 
 #include "bfs.h"
 
+#ifdef DEBUG
+    #define debug(var) \
+        do { \
+            std::cout << #var << " = " << (var) << std::endl; \
+        } while(0)
+
+    template<typename T>
+    void print_container(const T& container, const std::string& name) {
+        std::cout << name << " = [";
+        bool first = true;
+        for (const auto& elem : container) {
+            if (!first) std::cout << ", ";
+            std::cout << elem;
+            first = false;
+        }
+        std::cout << "]" << std::endl;
+    }
+
+    #define cdebug(var) \
+        print_container(var, #var)
+
+    #define print(var) \
+        do { \
+            std::cout << (var) << std::endl; \
+        } while(0)
+
+#else
+
+    #define debug(var) do {} while(0)
+    #define cdebug(var) do {} while(0)
+    #define print(var) do {} while(0)
+
+#endif
+
 std::vector<int> seq_bfs(const graph& g, const int root) {
     const size_t n = g.size();
     if (n == 0) {
@@ -45,46 +79,56 @@ std::vector<int> par_bfs(const graph& g, const int root) {
         return std::vector<int>();
     }
 
+    auto sizes = parlay::map(g, [](const std::vector<int>& x) {
+        return x.size();
+    });
+
+    const int m = parlay::reduce(sizes);
+
     std::vector<std::atomic<int>> dist(n);
     for (int i = 0; i < n; ++i) {
         dist[i].store(-1);
     }
 
-    std::vector<parlay::sequence<int>> f;
-    f.push_back({root});
+    parlay::sequence<int> f(n), f_new(m), degs(m);
+    int f_size = 1;
+    f[0] = {root};
+
     dist[root].store(0);
 
-    for (int i = 0; !f[i].empty(); ++i) {
+    for (int i = 0; f_size != 0; ++i) {
         // TODO(kasalakhov): optimize memory usage
-        parlay::sequence<int> degs(f[i].size());
-        parlay::parallel_for(0, f[i].size(), [i, &f, &g, &degs](const size_t j) {
-            degs[j] = g[f[i][j]].size();
+        parlay::parallel_for(0, f_size, [i, &f, &g, &degs](const size_t j) {
+            degs[j] = g[f[j]].size();
         });
-        const int degs_sum = parlay::scan_inplace(degs);
+        const int f_new_size = parlay::scan_inplace(degs.cut(0, f_size));
 
-        parlay::sequence<int> new_f(degs_sum, -1);
+        parlay::parallel_for(0, f_new_size, [&f_new](const int j) {
+            f_new[j] = -1;
+        });
+
         // TODO(kasalakhov): as_const references?
-        parlay::parallel_for(0, f[i].size(), [i, &g, &f, &degs, &dist, &new_f](const size_t j) {
-            const int new_dist = dist[f[i][j]].load() + 1;
-            assert(new_dist != 0);
+        parlay::parallel_for(0, f_size, [i, &g, &f, &degs, &dist, &f_new](const size_t j) {
+            const int new_dist = dist[f[j]].load() + 1;
+            assert(new_dist > 0);
 
-            int expected = -1;
             // TODO(kasalakhov): parallel for?
-            for (int k = 0; k < g[f[i][j]].size(); ++k) {
-                const int to = g[f[i][j]][k];
+            for (int k = 0; k < g[f[j]].size(); ++k) {
+                const int to = g[f[j]][k];
+                int expected = -1;
+
                 if (dist[to].compare_exchange_strong(expected, new_dist)) {
-                    new_f[degs[j] + k] = to;
+                    f_new[degs[j] + k] = to;
                 }
             }
         });
 
-        parlay::filter(new_f, [](const int x) {
+        f_size = parlay::filter_into_uninitialized(f_new.cut(0, f_new_size), f, [](const int x) {
             return x != -1;
         });
-
-        f.push_back(new_f);
     }
 
+    // TODO(kasalakhov): optimize copy with parlay
     std::vector<int> result_dist(n);
     for (int i = 0; i < n; ++i) {
         result_dist[i] = dist[i].load();
