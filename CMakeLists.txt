@@ -25,5 +25,5 @@ target_link_libraries(test_bfs PRIVATE
 include(GoogleTest)
 gtest_discover_tests(test_bfs)
 
-# add_executable(sort_benchmark benchmark/sort_benchmark.cpp)
-# target_link_libraries(sort_benchmark PRIVATE sortlib parlay benchmark::benchmark)
+add_executable(bfs_benchmark benchmark/bfs_benchmark.cpp)
+target_link_libraries(bfs_benchmark PRIVATE bfslib parlay benchmark::benchmark)
