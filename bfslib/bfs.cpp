@@ -75,7 +75,6 @@ std::vector<int> seq_bfs(const graph& g, const int root) {
 std::vector<int> par_bfs(const graph& g, const int root) {
     const int n = g.size();
     if (n == 0) {
-        // TODO(kasalakhov): no new struct
         return std::vector<int>();
     }
 
@@ -85,10 +84,10 @@ std::vector<int> par_bfs(const graph& g, const int root) {
 
     const int m = parlay::reduce(sizes);
 
-    std::vector<std::atomic<int>> dist(n);
-    for (int i = 0; i < n; ++i) {
+    parlay::sequence<std::atomic<int>> dist(n);
+    parlay::parallel_for(0, n, [&dist](const int i) {
         dist[i].store(-1);
-    }
+    });
 
     parlay::sequence<int> f(n), f_new(m), degs(m);
     int f_size = 1;
@@ -106,7 +105,6 @@ std::vector<int> par_bfs(const graph& g, const int root) {
             f_new[j] = -1;
         });
 
-        // TODO(kasalakhov): as_const references?
         parlay::parallel_for(0, f_size, [&](const size_t j) {
             const int new_dist = dist[f[j]].load() + 1;
             assert(new_dist > 0);
