@@ -113,8 +113,11 @@ std::vector<int> par_bfs(const graph& g, const int root) {
             for (int k = 0; k < g[f[j]].size(); ++k) {
                 const int to = g[f[j]][k];
                 int expected = -1;
-
-                if (dist[to].compare_exchange_strong(expected, new_dist)) {
+                while (!dist[to].compare_exchange_weak(expected, new_dist)) {
+                    if (expected != -1) break;
+                    expected = -1;
+                }
+                if (expected == -1) {
                     f_new[degs[j] + k] = to;
                 }
             }
