@@ -79,7 +79,7 @@ void BM_ParallelBfs(benchmark::State& state) {
     state.SetLabel(std::string("Threads: ") + std::to_string(num_threads));
 }
 
-BENCHMARK(BM_SequentialBfs)->Arg(10);
-BENCHMARK(BM_ParallelBfs)->Arg(10);
+BENCHMARK(BM_SequentialBfs)->Arg(300);
+BENCHMARK(BM_ParallelBfs)->Arg(300);
 
 BENCHMARK_MAIN();
