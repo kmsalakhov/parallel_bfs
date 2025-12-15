@@ -1,0 +1,67 @@
+{
+  "context": {
+    "date": "2025-12-15T22:06:35+03:00",
+    "host_name": "MSK-K49GLWNPQ7.local",
+    "executable": "./build/bfs_benchmark",
+    "num_cpus": 12,
+    "mhz_per_cpu": 24,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 65536,
+        "num_sharing": 0
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 131072,
+        "num_sharing": 0
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 4194304,
+        "num_sharing": 1
+      }
+    ],
+    "load_avg": [1.53613,2.34082,2.25244],
+    "library_version": "v1.9.4-84-g3e7dac66",
+    "library_build_type": "release",
+    "json_schema_version": 1
+  },
+  "benchmarks": [
+    {
+      "name": "BM_SequentialBfs/300/iterations:5",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "BM_SequentialBfs/300/iterations:5",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 5,
+      "real_time": 9.7120489180088043e+08,
+      "cpu_time": 9.7119580000000000e+08,
+      "time_unit": "ns",
+      "bytes_per_second": 1.1120311681743270e+08
+    },
+    {
+      "name": "BM_ParallelBfs/300/iterations:5",
+      "family_index": 1,
+      "per_family_instance_index": 0,
+      "run_name": "BM_ParallelBfs/300/iterations:5",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 5,
+      "real_time": 7.0636031678877771e+08,
+      "cpu_time": 7.0087800000000024e+08,
+      "time_unit": "ns",
+      "bytes_per_second": 1.5409243834162289e+08,
+      "label": "Threads: 4"
+    }
+  ]
+}
